@@ -4,47 +4,18 @@
  *  Created on: November 5, 2013
  *      Author: Siriwat Kasamwattanarote
  */
-#include <unistd.h>     // sysconf
-#include <sys/stat.h>   // file-directory existing
-#include <sys/types.h>  // file-directory
-#include <dirent.h>     // file-directory
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <tr1/unordered_map>
-#include <bitset>
-#include <math.h>
+#pragma once
+#include "../lib/ins/kp_dumper.h"
 
-#include "opencv2/core/core.hpp"
-#include "opencv2/nonfree/features2d.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/calib3d/calib3d.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
+using namespace ins;
 
-#include "../lib/alphautils/alphautils.h"
-#include "../lib/alphautils/imtools.h"
+string out_dir; // Output directory for visualized image
 
-using namespace std;
-using namespace tr1;
-using namespace cv;
-using namespace alphautils;
-using namespace alphautils::imtools;
-
-typedef struct _match_object{ size_t cluster_id; float weight; SIFT_Keypoint left_keypoint; SIFT_Keypoint right_keypoint; } match_object;
-vector<match_object> matches;
-bool has_dataset_path;
-bool has_query_path;
-string dataset_path;
-string query_path;
-Size query_size;
-string bow_matches_path;
-size_t feature_counter = 0;
-
-void load_match_file(const string& bow_matches_path);
-void draw_matches(const string& output_image_path, bool normsift = true);
-void draw_back_project(Mat& draw_space, bool normsift = true);
-
+void visualize(const string& query_dump_path, const int query_idx, const int query_sequence_id, const string& query_sequence_filename,
+               const string& dataset_dump_path, const int dataset_idx, const int dataset_sequence_id, const string& dataset_sequence_filename,
+               bool back_projection, bool normsift);
+void draw_query_backprojection(kp_dumper& query_dump, kp_dumper& dataset_dump, bool normsift);
+void draw_matches(vector<dump_object>& query_singledump, Mat& query_image, vector<dump_object>& dataset_singledump, Mat& dataset_image, Mat& out_image, bool normsift);
+void draw_link(vector<dump_object>& query_singledump, Mat& query_image, vector<dump_object>& dataset_singledump, Mat& dataset_image, Mat& out_image, bool normsift);
+void draw_kp(vector<dump_object>& kp_singledump,  Mat& draw_image, bool normsift);
 //;)
