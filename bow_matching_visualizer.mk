@@ -13,8 +13,8 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Siriwat Kasamwattanarote
-Date                   :=29/09/15
-CodeLitePath           :="/home/stylix/.codelite"
+Date                   :=02/10/15
+CodeLitePath           :="/home/stylix/Dropbox/MyDocument/SokendaiCourse/Researches/Workspace/configurations/.codelite"
 LinkerName             :=g++
 SharedObjectLinkerName :=g++ -shared -fPIC
 ObjectSuffix           :=.o
@@ -41,7 +41,7 @@ IncludePCH             :=
 RcIncludePath          := 
 Libs                   := $(LibrarySwitch)ins $(LibrarySwitch)alphautils $(LibrarySwitch)sifthesaff $(LibrarySwitch)opencv_core $(LibrarySwitch)opencv_features2d $(LibrarySwitch)opencv_highgui $(LibrarySwitch)ransac $(LibrarySwitch)lapacke $(LibrarySwitch)lapack $(LibrarySwitch)blas $(LibrarySwitch)tmglib 
 ArLibs                 :=  "libins.a" "libalphautils.a" "libsifthesaff.a" "opencv_core" "opencv_features2d" "opencv_highgui" "libransac.a" "lapacke" "lapack" "blas" "tmglib" 
-LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)/home/stylix/local/lib $(LibraryPathSwitch)../lib/ins $(LibraryPathSwitch)../lib/sifthesaff $(LibraryPathSwitch)../lib/alphautils $(LibraryPathSwitch)../lib/ransac 
+LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)/home/stylix/local/lib $(LibraryPathSwitch)../lib/ins/$(ConfigurationName) $(LibraryPathSwitch)../lib/sifthesaff/$(ConfigurationName) $(LibraryPathSwitch)../lib/alphautils/$(ConfigurationName) $(LibraryPathSwitch)../lib/ransac/$(ConfigurationName) 
 
 ##
 ## Common variables
