@@ -5,16 +5,16 @@
 ## Release
 ProjectName            :=bow_matching_visualizer
 ConfigurationName      :=Release
-WorkspacePath          := "/home/stylix/Dropbox/MyDocument/SokendaiCourse/Researches/Workspace/code"
-ProjectPath            := "/home/stylix/Dropbox/MyDocument/SokendaiCourse/Researches/Workspace/code/bow_matching_visualizer"
+WorkspacePath          := "${HOME}/webstylix/code"
+ProjectPath            := "${HOME}/webstylix/code/bow_matching_visualizer"
 IntermediateDirectory  :=./Release
 OutDir                 := $(IntermediateDirectory)
 CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Siriwat Kasamwattanarote
-Date                   :=02/10/15
-CodeLitePath           :="/home/stylix/Dropbox/MyDocument/SokendaiCourse/Researches/Workspace/configurations/.codelite"
+Date                   :=04/10/15
+CodeLitePath           :="${HOME}/webstylix/configurations/.codelite"
 LinkerName             :=g++
 SharedObjectLinkerName :=g++ -shared -fPIC
 ObjectSuffix           :=.o
@@ -36,12 +36,12 @@ ObjectsFileList        :="bow_matching_visualizer.txt"
 PCHCompileFlags        :=
 MakeDirCommand         :=mkdir -p
 LinkOptions            :=  `pkg-config opencv --libs` `pkg-config --libs lapacke`
-IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch)/home/stylix/local/include 
+IncludePath            :=  $(IncludeSwitch). $(IncludeSwitch)${HOME}/local/include 
 IncludePCH             := 
 RcIncludePath          := 
 Libs                   := $(LibrarySwitch)ins $(LibrarySwitch)alphautils $(LibrarySwitch)sifthesaff $(LibrarySwitch)opencv_core $(LibrarySwitch)opencv_features2d $(LibrarySwitch)opencv_highgui $(LibrarySwitch)ransac $(LibrarySwitch)lapacke $(LibrarySwitch)lapack $(LibrarySwitch)blas $(LibrarySwitch)tmglib 
 ArLibs                 :=  "libins.a" "libalphautils.a" "libsifthesaff.a" "opencv_core" "opencv_features2d" "opencv_highgui" "libransac.a" "lapacke" "lapack" "blas" "tmglib" 
-LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)/home/stylix/local/lib $(LibraryPathSwitch)../lib/ins/$(ConfigurationName) $(LibraryPathSwitch)../lib/sifthesaff/$(ConfigurationName) $(LibraryPathSwitch)../lib/alphautils/$(ConfigurationName) $(LibraryPathSwitch)../lib/ransac/$(ConfigurationName) 
+LibPath                := $(LibraryPathSwitch). $(LibraryPathSwitch)${HOME}/local/lib $(LibraryPathSwitch)../lib/ins/$(ConfigurationName) $(LibraryPathSwitch)../lib/sifthesaff/$(ConfigurationName) $(LibraryPathSwitch)../lib/alphautils/$(ConfigurationName) $(LibraryPathSwitch)../lib/ransac/$(ConfigurationName) 
 
 ##
 ## Common variables
@@ -92,7 +92,7 @@ PreBuild:
 ## Objects
 ##
 $(IntermediateDirectory)/bow_matching_visualizer.cpp$(ObjectSuffix): bow_matching_visualizer.cpp $(IntermediateDirectory)/bow_matching_visualizer.cpp$(DependSuffix)
-	$(CXX) $(IncludePCH) $(SourceSwitch) "/home/stylix/Dropbox/MyDocument/SokendaiCourse/Researches/Workspace/code/bow_matching_visualizer/bow_matching_visualizer.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/bow_matching_visualizer.cpp$(ObjectSuffix) $(IncludePath)
+	$(CXX) $(IncludePCH) $(SourceSwitch) "${HOME}/webstylix/code/bow_matching_visualizer/bow_matching_visualizer.cpp" $(CXXFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/bow_matching_visualizer.cpp$(ObjectSuffix) $(IncludePath)
 $(IntermediateDirectory)/bow_matching_visualizer.cpp$(DependSuffix): bow_matching_visualizer.cpp
 	@$(CXX) $(CXXFLAGS) $(IncludePCH) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/bow_matching_visualizer.cpp$(ObjectSuffix) -MF$(IntermediateDirectory)/bow_matching_visualizer.cpp$(DependSuffix) -MM "bow_matching_visualizer.cpp"
 
