@@ -602,6 +602,7 @@ void draw_matches(vector<dump_object>& query_singledump, Mat& query_image, vecto
 	// Look up table
 	bitset<1000000> query_mask;
 	bitset<1000000> query_fg;
+	bitset<1000000> draw_word;
 	Point2f* query_dump_LUT = new Point2f[1000000];
 	
 	timespec startTime = CurrentPreciseTime();
@@ -629,7 +630,7 @@ void draw_matches(vector<dump_object>& query_singledump, Mat& query_image, vecto
 	{
 		// Draw only match the same cluster_id
 		size_t cluster_id = dataset_singledump[dataset_dump_idx].cluster_id;
-		if (query_mask[cluster_id])
+		if (query_mask[cluster_id] && !draw_word[cluster_id])
 		{
 			// Make point
 			Point2f pstart = query_dump_LUT[cluster_id];
@@ -644,9 +645,15 @@ void draw_matches(vector<dump_object>& query_singledump, Mat& query_image, vecto
 			}
 			// Draw line
 			line(draw_image, pstart, pend, Scalar(200, 0, 0), 1, CV_AA);    // Line
+			
+			// Flag draw
+			draw_word.set(cluster_id);
 		}
 	}
 	cout << "done! (in " << setprecision(2) << fixed << TimeElapse(startTime) << " s)" << endl;
+
+	// Reset draw word
+	draw_word.reset();
 
     // Draw point (all points to query)	
 	startTime = CurrentPreciseTime();
@@ -655,7 +662,7 @@ void draw_matches(vector<dump_object>& query_singledump, Mat& query_image, vecto
 	{
 		// Draw only match the same cluster_id
 		size_t cluster_id = dataset_singledump[dataset_dump_idx].cluster_id;
-		if (query_mask[cluster_id])
+		if (query_mask[cluster_id] && !draw_word[cluster_id])
 		{
 			// Make point
 			Point2f pstart = query_dump_LUT[cluster_id];
@@ -684,6 +691,8 @@ void draw_matches(vector<dump_object>& query_singledump, Mat& query_image, vecto
 			circle(draw_image, pstart, 0, color, 4, CV_AA);
 			circle(draw_image, pend, 0, color, 4, CV_AA);
 
+			// Flag draw
+			draw_word.set(cluster_id);
 		}
 	}
 	cout << "done! (in " << setprecision(2) << fixed << TimeElapse(startTime) << " s)" << endl;
