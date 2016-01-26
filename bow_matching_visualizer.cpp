@@ -14,7 +14,9 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <iomanip>
 #include <unordered_map>
+#include <map>
 #include <bitset>
 #include <cmath>
 
@@ -401,10 +403,17 @@ void visualize(const string& query_dump_path, const int query_idx, const int que
         query_idx != -1 && dataset_idx != -1)
     {
         // Load dump file
+		timespec startTime = CurrentPreciseTime();
+		cout << "Load query dump.."; cout.flush();
         kp_dumper query_dump;
         query_dump.load(query_dump_path);
+		cout << "done! (in " << setprecision(2) << fixed << TimeElapse(startTime) << " s)" << endl;
+		
+		startTime = CurrentPreciseTime();
+		cout << "Load dataset dump.."; cout.flush();
         kp_dumper dataset_dump;
         dataset_dump.load(dataset_dump_path);
+		cout << "done! (in " << setprecision(2) << fixed << TimeElapse(startTime) << " s)" << endl;
 
         // Convert filename to sequence_id
         int _query_sequence_id = query_sequence_id;
@@ -423,12 +432,14 @@ void visualize(const string& query_dump_path, const int query_idx, const int que
         else
         {
             // Only support one by one drawing
-
+			startTime = CurrentPreciseTime();
+			cout << "Get image path.."; cout.flush();
             string query_image_path = query_dump.get_full_imgpath(query_idx, _query_sequence_id);
             string dataset_image_path = dataset_dump.get_full_imgpath(dataset_idx, _dataset_sequence_id);
             string vis_img_path = out_dir + "/match." + ZeroPadString(toString(query_idx), 3) + "-" + ZeroPadString(toString(_query_sequence_id), 3) + "-" +
                                                         ZeroPadString(toString(dataset_idx), 3) + "-" + ZeroPadString(toString(_dataset_sequence_id), 3) + "." +
                                                         get_filename(query_image_path) + "-" + get_filename(dataset_image_path) + "_vis.jpg";
+			cout << "done! (in " << setprecision(2) << fixed << TimeElapse(startTime) << " s)" << endl;
 
             /// For query, this is important!!
             /// Please remove prefix/postfix of pre/post processing filename before use
@@ -452,11 +463,16 @@ void visualize(const string& query_dump_path, const int query_idx, const int que
             Mat dataset_image = imread(dataset_image_path);     // Dataset
             Mat draw_image;
             concatimage(query_image, dataset_image, draw_image);// Drawing space
-
+			
+			startTime = CurrentPreciseTime();
+			cout << "Get dump.."; cout.flush();
             vector<dump_object> query_single_filtered_dump;
             query_dump.get_singledump_with_filter(query_idx, _query_sequence_id, query_single_filtered_dump);
             vector<dump_object> dataset_single_filtered_dump;
             dataset_dump.get_singledump_with_filter(dataset_idx, _dataset_sequence_id, dataset_single_filtered_dump);
+			cout << "done! (in " << setprecision(2) << fixed << TimeElapse(startTime) << " s)" << endl;
+			// Draw
+			cout << "Drawing.." << endl;
             draw_matches(query_single_filtered_dump, query_image,
                          dataset_single_filtered_dump, dataset_image,
                          draw_image, normsift);
@@ -583,69 +599,98 @@ void draw_query_backprojection(kp_dumper& query_dump, kp_dumper& dataset_dump, b
 
 void draw_matches(vector<dump_object>& query_singledump, Mat& query_image, vector<dump_object>& dataset_singledump, Mat& dataset_image, Mat& draw_image, bool normsift)
 {
-    // Draw line (M x M)
-    for (size_t query_dump_idx = 0; query_dump_idx < query_singledump.size(); query_dump_idx++)
-    {
-        for (size_t dataset_dump_idx = 0; dataset_dump_idx < dataset_singledump.size(); dataset_dump_idx++)
-        {
-            // Draw only match the same cluster_id
-            if (query_singledump[query_dump_idx].cluster_id == dataset_singledump[dataset_dump_idx].cluster_id)
-            {
-                // Make point
-                Point2f pstart(query_singledump[query_dump_idx].kp.x, query_singledump[query_dump_idx].kp.y);
-                Point2f pend(dataset_singledump[dataset_dump_idx].kp.x, dataset_singledump[dataset_dump_idx].kp.y);
-                if (normsift)
-                {
-                    pstart.x *= query_image.cols;   // Re-scale pstart
-                    pstart.y *= query_image.rows;
-                    pend.x *= dataset_image.cols;   // Re-scale pend
-                    pend.y *= dataset_image.rows;
-                    pend.x += query_image.cols;     // Shift end Offset
-                }
-                // Draw line
-                line(draw_image, pstart, pend, Scalar(200, 0, 0), 1, CV_AA);    // Line
-            }
-        }
-    }
+	// Look up table
+	bitset<1000000> query_mask;
+	bitset<1000000> query_fg;
+	Point2f* query_dump_LUT = new Point2f[1000000];
+	
+	timespec startTime = CurrentPreciseTime();
+	cout << "Preparing Query lookup.."; cout.flush();
+	// Constructing query lookup table.
+	for (size_t query_dump_idx = 0; query_dump_idx < query_singledump.size(); query_dump_idx++)
+	{
+		size_t cluster_id = query_singledump[query_dump_idx].cluster_id;
+		// Set only one feature
+		if (!query_mask[cluster_id])
+		{
+			query_dump_LUT[cluster_id] = Point2f(query_singledump[query_dump_idx].kp.x, query_singledump[query_dump_idx].kp.y);
+			query_mask.set(cluster_id);
+		}
+		// Set fg
+		if (query_singledump[query_dump_idx].fg)
+			query_fg.set(cluster_id);
+	}
+	cout << "done! (in " << setprecision(2) << fixed << TimeElapse(startTime) << " s)" << endl;
+	
+    // Draw line (all points to query)
+	startTime = CurrentPreciseTime();
+	cout << "Draw lines.."; cout.flush();
+    for (size_t dataset_dump_idx = 0; dataset_dump_idx < dataset_singledump.size(); dataset_dump_idx++)
+	{
+		// Draw only match the same cluster_id
+		size_t cluster_id = dataset_singledump[dataset_dump_idx].cluster_id;
+		if (query_mask[cluster_id])
+		{
+			// Make point
+			Point2f pstart = query_dump_LUT[cluster_id];
+			Point2f pend(dataset_singledump[dataset_dump_idx].kp.x, dataset_singledump[dataset_dump_idx].kp.y);
+			if (normsift)
+			{
+				pstart.x *= query_image.cols;   // Re-scale pstart
+				pstart.y *= query_image.rows;
+				pend.x *= dataset_image.cols;   // Re-scale pend
+				pend.y *= dataset_image.rows;
+				pend.x += query_image.cols;     // Shift end Offset
+			}
+			// Draw line
+			line(draw_image, pstart, pend, Scalar(200, 0, 0), 1, CV_AA);    // Line
+		}
+	}
+	cout << "done! (in " << setprecision(2) << fixed << TimeElapse(startTime) << " s)" << endl;
 
-    // Draw point (M x M)
-    for (size_t query_dump_idx = 0; query_dump_idx < query_singledump.size(); query_dump_idx++)
-    {
-        for (size_t dataset_dump_idx = 0; dataset_dump_idx < dataset_singledump.size(); dataset_dump_idx++)
-        {
-            // Draw only match the same cluster_id
-            if (query_singledump[query_dump_idx].cluster_id == dataset_singledump[dataset_dump_idx].cluster_id)
-            {
-                // Make point
-                Point2f pstart(query_singledump[query_dump_idx].kp.x, query_singledump[query_dump_idx].kp.y);
-                Point2f pend(dataset_singledump[dataset_dump_idx].kp.x, dataset_singledump[dataset_dump_idx].kp.y);
-                if (normsift)
-                {
-                    pstart.x *= query_image.cols;   // Re-scale pstart
-                    pstart.y *= query_image.rows;
-                    pend.x *= dataset_image.cols;   // Re-scale pend
-                    pend.y *= dataset_image.rows;
-                    pend.x += query_image.cols;     // Shift end Offset
-                }
+    // Draw point (all points to query)	
+	startTime = CurrentPreciseTime();
+	cout << "Draw points.."; cout.flush();
+    for (size_t dataset_dump_idx = 0; dataset_dump_idx < dataset_singledump.size(); dataset_dump_idx++)
+	{
+		// Draw only match the same cluster_id
+		size_t cluster_id = dataset_singledump[dataset_dump_idx].cluster_id;
+		if (query_mask[cluster_id])
+		{
+			// Make point
+			Point2f pstart = query_dump_LUT[cluster_id];
+			Point2f pend(dataset_singledump[dataset_dump_idx].kp.x, dataset_singledump[dataset_dump_idx].kp.y);
+			if (normsift)
+			{
+				pstart.x *= query_image.cols;   // Re-scale pstart
+				pstart.y *= query_image.rows;
+				pend.x *= dataset_image.cols;   // Re-scale pend
+				pend.y *= dataset_image.rows;
+				pend.x += query_image.cols;     // Shift end Offset
+			}
 
-                // Draw affine
-                //draw_a_sift(draw_image, matches[match_id].left_keypoint, DRAW_AFFINE, RGB_SPACE, false);    // norm point is false, because it already rescaled.
-                //draw_a_sift(draw_image, matches[match_id].right_keypoint, DRAW_AFFINE, RGB_SPACE, false);   // norm point is false, because it already rescaled.
+			// Draw affine
+			//draw_a_sift(draw_image, matches[match_id].left_keypoint, DRAW_AFFINE, RGB_SPACE, false);    // norm point is false, because it already rescaled.
+			//draw_a_sift(draw_image, matches[match_id].right_keypoint, DRAW_AFFINE, RGB_SPACE, false);   // norm point is false, because it already rescaled.
 
-                // Draw point
-                Scalar color;
-                if (query_singledump[query_dump_idx].fg)
-                    color = Scalar(0, 255, 0);  // Green
-                else
-                    color = Scalar(0, 0, 255);  // Red
-                circle(draw_image, pstart, 0, Scalar(0, 0, 0), 5, CV_AA);    // Border
-                circle(draw_image, pend, 0, Scalar(0, 0, 0), 5, CV_AA);      // Border
-                circle(draw_image, pstart, 0, color, 4, CV_AA);
-                circle(draw_image, pend, 0, color, 4, CV_AA);
+			// Draw point
+			Scalar color;
+			if (query_fg[cluster_id])
+				color = Scalar(0, 255, 0);  // Green
+			else
+				color = Scalar(0, 0, 255);  // Red
+			circle(draw_image, pstart, 0, Scalar(0, 0, 0), 5, CV_AA);    // Border
+			circle(draw_image, pend, 0, Scalar(0, 0, 0), 5, CV_AA);      // Border
+			circle(draw_image, pstart, 0, color, 4, CV_AA);
+			circle(draw_image, pend, 0, color, 4, CV_AA);
 
-            }
-        }
-    }
+		}
+	}
+	cout << "done! (in " << setprecision(2) << fixed << TimeElapse(startTime) << " s)" << endl;
+	
+	// Release memory
+	delete[] query_dump_LUT;
+	
 }
 
 void draw_link(vector<dump_object>& query_singledump, Mat& query_image, vector<dump_object>& dataset_singledump, Mat& dataset_image, Mat& draw_image, bool normsift)
